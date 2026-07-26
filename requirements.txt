@@ -1,0 +1,10 @@
+tensorflow[and-cuda]>=2.16
+numpy
+pandas
+matplotlib
+seaborn
+scikit-learn
+opencv-python-headless
+Pillow
+scipy
+flask>=3.0

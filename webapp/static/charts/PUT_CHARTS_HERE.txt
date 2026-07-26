@@ -1,0 +1,2 @@
+Copy the 9 PNGs here from model_training/outputs/charts/ to populate the
+/dashboard page. See ../webapp/README.md for the exact command.

@@ -1,0 +1,6 @@
+Copy these three files here from model_training/outputs/:
+  - pneumonia_sigmoid.keras
+  - pneumonia_softmax.keras
+  - deployment_config.json
+
+See ../webapp/README.md for the exact command.
