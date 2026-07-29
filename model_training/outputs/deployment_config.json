@@ -1,0 +1,13 @@
+{
+  "img_size": [
+    224,
+    224
+  ],
+  "preprocessing": "densenet121",
+  "class_indices": {
+    "NORMAL": 0,
+    "PNEUMONIA": 1
+  },
+  "model_format": "keras",
+  "backbone": "densenet121"
+}

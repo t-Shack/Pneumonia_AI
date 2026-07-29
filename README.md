@@ -133,7 +133,6 @@ kaggle datasets download -d nih-chest-xrays/data -f images_001/images/00000013_0
 
 cd model_training
 python download_pneumonia_images.py
-
 ```
 Put every downloaded image somewhere under `data/nih_raw/images/` — the
 prep script searches recursively, so exact subfolder layout doesn't matter.

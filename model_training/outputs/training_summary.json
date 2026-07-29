@@ -1,0 +1,28 @@
+[
+  {
+    "label": "sigmoid",
+    "activation": "sigmoid",
+    "backbone": "densenet121",
+    "model_path": "./outputs/models/pneumonia_sigmoid.keras",
+    "warmup_epochs": 5,
+    "fine_tune_epochs": 30,
+    "training_time_seconds": 22407.0,
+    "best_val_loss": 7.041671390949078e-13,
+    "best_val_accuracy": 0.5461538434028625,
+    "loss_function": "focal",
+    "class_weight_applied": null
+  },
+  {
+    "label": "softmax",
+    "activation": "softmax",
+    "backbone": "densenet121",
+    "model_path": "./outputs/models/pneumonia_softmax.keras",
+    "warmup_epochs": 5,
+    "fine_tune_epochs": 20,
+    "training_time_seconds": 20744.2,
+    "best_val_loss": 0.003069158410653472,
+    "best_val_accuracy": 0.9884615540504456,
+    "loss_function": "focal",
+    "class_weight_applied": null
+  }
+]
