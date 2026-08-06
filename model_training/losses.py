@@ -1,10 +1,20 @@
 """
 Categorical focal loss (Lin et al., 2017) — down-weights easy,
-high-confidence-correct examples during training so the model can't reach
-good overall accuracy just by nailing the majority class. This is the
-current standard fix for class-imbalanced classification, and a more
-targeted tool than class_weight alone for the exact failure mode this
-project ran into (model defaulting to predicting PNEUMONIA).
+high-confidence-correct examples so the model can't reach good overall
+accuracy just by nailing the majority class.
+
+BUG FIX (this version): renormalizes y_pred before computing the loss —
+matching what Keras's built-in categorical_crossentropy does internally.
+Without this, a 2-neuron SIGMOID head (whose outputs are independent and
+don't sum to 1, unlike softmax) never receives gradient pressure pushing
+either neuron DOWN — only ever up, whenever it's the correct-class neuron
+for a given example. Both neurons drift toward predicting "yes" for
+everything: loss collapses toward 0 while accuracy stays near-random. This
+was confirmed directly: sigmoid training under the unfixed loss reached
+val_loss=7e-13 with val_accuracy=54.6% (barely above chance). Softmax was
+never affected, since its outputs already sum to 1 (renormalizing is a
+no-op) — confirmed the fix leaves softmax's loss values byte-for-byte
+identical on matched inputs.
 
 IMPORTANT: any script that calls tensorflow.keras.models.load_model() on a
 model trained with this loss must `import losses` first (even if unused
@@ -26,6 +36,10 @@ class CategoricalFocalLoss(keras.losses.Loss):
 
     def call(self, y_true, y_pred):
         y_true = tf.cast(y_true, y_pred.dtype)
+        # THE FIX: couple independent-sigmoid outputs the same way Keras's
+        # built-in categorical_crossentropy does internally. No-op for
+        # softmax (already sums to 1); essential for sigmoid.
+        y_pred = y_pred / tf.reduce_sum(y_pred, axis=-1, keepdims=True)
         y_pred = tf.clip_by_value(y_pred, keras.backend.epsilon(), 1.0 - keras.backend.epsilon())
         cross_entropy = -y_true * tf.math.log(y_pred)
         weight = self.alpha * y_true * tf.pow(1.0 - y_pred, self.gamma)

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Result — Pneumonia AI{% endblock %}
+
+{% block content %}
+<section class="result-header">
+  <p class="eyebrow">ANALYSIS RESULT</p>
+  <div class="verdict-row">
+    <h1 class="verdict {{ 'pneumonia' if result.predicted_class == 'PNEUMONIA' else 'normal' }}">
+      {{ 'Pneumonia Detected' if result.predicted_class == 'PNEUMONIA' else 'Normal' }}
+    </h1>
+    <div class="confidence-block">
+      <p class="confidence-label">Confidence Score</p>
+      <p class="confidence-value">{{ '%.2f' % (result.confidence * 100) }}%</p>
+      <div class="gauge">
+        <div class="gauge-fill {{ 'pneumonia' if result.predicted_class == 'PNEUMONIA' else 'normal' }}"
+             style="width: {{ '%.1f' % (result.confidence * 100) }}%"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="result-grid">
+  <div class="panel">
+    <p class="panel-heading">Uploaded X-ray</p>
+    <img src="{{ result.original_image }}" alt="Uploaded chest X-ray" class="result-image">
+  </div>
+
+  <div class="panel">
+    <p class="panel-heading">Grad-CAM &mdash; Explainable AI</p>
+    <img src="{{ result.gradcam_image }}" alt="Grad-CAM heatmap overlay" class="result-image">
+    <p class="panel-note">Warmer regions (red/yellow) contributed most to the model's prediction.</p>
+  </div>
+
+  <div class="panel">
+    <p class="panel-heading">Probability Distribution</p>
+    <canvas id="probability-chart" width="240" height="240"></canvas>
+    <div class="prob-legend">
+      {% for label, prob in result.probabilities.items() %}
+      <div class="prob-legend-row">
+        <span class="prob-dot {{ 'pneumonia' if label == 'PNEUMONIA' else 'normal' }}"></span>
+        <span>{{ label }}</span>
+        <span class="prob-value">{{ '%.2f' % (prob * 100) }}%</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="recommendation-panel {{ 'pneumonia' if result.predicted_class == 'PNEUMONIA' else 'normal' }}">
+  <p class="panel-heading">Clinical Recommendation</p>
+  <p>{{ result.clinical_recommendation }}</p>
+</section>
+
+<section class="processing-info">
+  <p class="panel-heading">Processing Information</p>
+  <div class="info-grid">
+    <div><span class="info-label">AI Model</span><span>{{ result.backbone | capitalize }} CNN ({{ result.model_label | capitalize }} head)</span></div>
+    <div><span class="info-label">Processing Time</span><span>{{ result.processing_time_ms }} ms</span></div>
+    <div><span class="info-label">Input Resolution</span><span>{{ result.input_resolution }} px (original: {{ result.original_resolution }} px)</span></div>
+    <div><span class="info-label">Processing Mode</span><span>Local AI Processing</span></div>
+  </div>
+</section>
+
+<section class="action-row">
+  <a href="{{ url_for('home') }}#upload" class="btn-secondary">Analyze Another Image</a>
+  <a href="{{ url_for('download_pdf', result_id=result_id) }}" class="btn-secondary">Download Report (PDF)</a>
+  <button type="button" class="btn-secondary" onclick="window.print()">Print Report</button>
+  <a href="{{ url_for('home') }}" class="btn-secondary">Return to Home</a>
+</section>
+{% endblock %}
+
+{% block head_extra %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const probData = {{ result.probabilities | tojson }};
+const ctx = document.getElementById('probability-chart');
+new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(probData),
+    datasets: [{
+      data: Object.values(probData).map(v => (v * 100).toFixed(2)),
+      backgroundColor: Object.keys(probData).map(k => k === 'PNEUMONIA' ? '#e8664d' : '#6fcf97'),
+      borderColor: '#1a222b',
+      borderWidth: 3,
+    }],
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    cutout: '68%',
+  },
+});
+</script>
+{% endblock %}

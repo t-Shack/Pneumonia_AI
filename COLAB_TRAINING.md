@@ -53,8 +53,8 @@ switch to Option B. It's not you; it's a fairly new extension.
 
    **From GitHub (recommended):**
    ```python
-   !git clone https://github.com/<your-username>/<your-repo>.git
-   %cd <your-repo>/model_training
+   !git clone https://github.com/t-Shack/Pneumonia_AI.git
+   %cd Pneumonia_AI/model_training
    ```
 
    **No repo — upload a zip instead:**
@@ -85,7 +85,7 @@ switch to Option B. It's not you; it's a fairly new extension.
 6. Run training:
    ```python
    import os
-   os.environ["PNEUMONIA_DATA_DIR"] = "/content/<your-repo>/model_training/data/chest_xray/chest_xray"
+   os.environ["PNEUMONIA_DATA_DIR"] = "/content/Pneumonia_AI/model_training/data/chest_xray"
    !python train.py
    ```
 

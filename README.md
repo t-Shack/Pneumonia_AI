@@ -183,7 +183,7 @@ python cross_validate.py --activation softmax --folds 5
 
 Then wire up the webapp:
 ```bash
-cd ../webapp
+cd webapp
 cp ../model_training/outputs/models/*.keras models/
 cp ../model_training/outputs/deployment_config.json models/
 cp ../model_training/outputs/charts/*.png static/charts/

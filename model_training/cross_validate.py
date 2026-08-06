@@ -1,16 +1,7 @@
 """
-Stratified k-fold cross-validation — an optional, more rigorous alternative
-to a single train/val split. EXPENSIVE: trains config.CV_FOLDS full models
-per activation, each with the same two-phase (warm-up + fine-tune) schedule
-as train.py. Given CPU training times observed in this project (each single
-model already takes multiple hours), a 5-fold run means ~5x that per
-activation — budget accordingly, and ideally run this on a GPU.
-
-This does NOT replace train.py / the primary train/test split — it's a
-separate rigor check you run deliberately when you want a mean±std result
-instead of a single number, e.g. for the paper's final reported numbers.
-It only touches the train/ folder (never the held-out test/ folder, and
-never the external NIH set) — those stay untouched as genuinely unseen data.
+Stratified k-fold cross-validation — optional, more rigorous alternative to
+a single train/val split. EXPENSIVE: trains config.CV_FOLDS full models per
+activation. Only touches train/ — test/ and the external set stay untouched.
 
 Run:
     python cross_validate.py --activation sigmoid --folds 5
@@ -38,9 +29,6 @@ from model_architecture import build_model, unfreeze_top_layers, get_preprocess_
 
 
 def build_file_dataframe():
-    """One row per training-set image: filepath + class label. Built from
-    config.TRAIN_DIR's {NORMAL,PNEUMONIA} subfolders — the same pool
-    train.py draws its 95/5 split from, just resplit K ways here instead."""
     rows = []
     for class_name in config.CLASS_NAMES:
         class_dir = os.path.join(config.TRAIN_DIR, class_name)
@@ -130,15 +118,10 @@ def main():
     losses_ = [r["val_log_loss"] for r in fold_results]
 
     summary = {
-        "activation": args.activation,
-        "folds": args.folds,
-        "fold_results": fold_results,
-        "accuracy_mean": float(np.mean(accs)),
-        "accuracy_std": float(np.std(accs)),
-        "macro_f1_mean": float(np.mean(f1s)),
-        "macro_f1_std": float(np.std(f1s)),
-        "log_loss_mean": float(np.mean(losses_)),
-        "log_loss_std": float(np.std(losses_)),
+        "activation": args.activation, "folds": args.folds, "fold_results": fold_results,
+        "accuracy_mean": float(np.mean(accs)), "accuracy_std": float(np.std(accs)),
+        "macro_f1_mean": float(np.mean(f1s)), "macro_f1_std": float(np.std(f1s)),
+        "log_loss_mean": float(np.mean(losses_)), "log_loss_std": float(np.std(losses_)),
         "total_time_seconds": round(elapsed, 1),
     }
 

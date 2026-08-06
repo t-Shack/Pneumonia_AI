@@ -1,0 +1,1 @@
+Copy your trained .keras file + deployment_config.json here (must include "best_model", written by model_training/select_best_model.py). See ../webapp/README.md.

@@ -1,79 +1,81 @@
-# Pneumonia Detection — Flask App (Phase 2)
+# Pneumonia Detection — Flask App (v3: single best-model, PDF reports, live Grad-CAM)
 
-Self-contained Flask app: upload a chest X-ray, get predictions from both
-the sigmoid and softmax models side by side, and browse the evaluation
-charts on `/dashboard`.
+## 1. Copy the model over
 
-## 1. Copy the trained models over
-
-This app doesn't reach into the `model_training/` project at runtime — it
-reads from its own `models/` folder. From the `pneumonia-ai-system/` root:
+Only ONE model gets served now (whichever `select_best_model.py` picked),
+not both sigmoid and softmax side by side. From the `pneumonia-ai-system/` root:
 
 ```bash
-cp model_training/outputs/models/pneumonia_sigmoid.keras webapp/models/
-cp model_training/outputs/models/pneumonia_softmax.keras webapp/models/
 cp model_training/outputs/deployment_config.json webapp/models/
-
+```
+Then copy **only** the `.keras` file matching `deployment_config.json`'s
+`"best_model"` field — e.g. if it says `"best_model": "softmax"`:
+```bash
+cp model_training/outputs/models/pneumonia_softmax.keras webapp/models/
 cp model_training/outputs/charts/*.png webapp/static/charts/
 ```
-
-(Windows: use `copy` instead of `cp`, same paths.)
+If `deployment_config.json` has no `"best_model"` field, run
+`model_training/select_best_model.py` first — the app won't start without it.
 
 ## 2. Install & run
 
 ```bash
 cd webapp
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+python -m venv venv && source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python app.py
 ```
+Open `http://localhost:5000`. Public URL: see the earlier `ngrok` setup
+notes (unchanged) — `ngrok http 5000` in a second terminal.
 
-You'll see both models load once at startup (takes a few seconds), then:
+## 3. What's new in this version
 
-```
-* Running on http://0.0.0.0:5000
-```
+- **Single model, not a side-by-side comparison.** The dual sigmoid/softmax
+  view is gone from the main app — that comparison still lives in the paper
+  and the `/dashboard` charts, but the product now ships one model.
+- **Real pages, not an AJAX single-page app.** `/predict` is a genuine form
+  POST; on success it redirects to `/result/<id>`, a real page you can
+  reload, print, or share the URL of (until it expires).
+- **Results are held in memory, not a database.** `result_store.py` is a
+  simple in-memory dict keyed by a random ID, evicted after
+  `config.RESULT_TTL_SECONDS` (default 30 minutes). This is deliberate —
+  prediction history (a real persistent database) was explicitly deferred
+  to a later round. Single-process only: fine for `python app.py` or a
+  single gunicorn worker; multiple workers won't share this dict, which is
+  exactly the point where the deferred history feature becomes necessary.
+- **Live Grad-CAM.** Every uploaded image gets its own heatmap, generated
+  on the spot (`gradcam.py`, duplicated from `model_training/` so the
+  webapp stays deployable standalone) — not pulled from a precomputed chart.
+- **PDF export.** `/result/<id>/pdf` re-renders the same stored result data
+  as a PDF via `xhtml2pdf` (pure-Python, no system-library dependencies —
+  deliberately chosen over `weasyprint` for that reason, given deploying to
+  Render is still on the table). `pdf_report.html` is a separate, simpler
+  template from the live page — xhtml2pdf's CSS support doesn't cover
+  flexbox/grid, so it's plain tables and inline styles.
+- **Confidence-tiered clinical language**, not a flat "high confidence"
+  regardless of the actual number — see `CONFIDENCE_BANDS` in `config.py`
+  and `CLINICAL_RECOMMENDATIONS` in `inference.py` if you want to adjust
+  the thresholds or wording.
+- **"Local AI processing" language, not "offline."** The site can be
+  reached over the internet (that's the whole point of ngrok/Render); what
+  IS true and worth saying is that inference itself never calls an external
+  API. Check `templates/` and `config.py`'s `INSTITUTION` dict if you want
+  to adjust any copy.
 
-Open `http://localhost:5000` to try it locally.
+## 4. Before you deploy for real
 
-## 3. Get a public URL with ngrok
+Replace the placeholders in `config.py`'s `INSTITUTION` dict —
+`university`, `department`, `researcher`, `email`, `phone` — they're
+currently literal `[bracketed placeholder]` strings by design, per your
+instruction, and they show up in the footer and the PDF report as-is.
 
-In a **second terminal**, with the Flask app still running in the first:
+## 5. Tested before delivery
 
-```bash
-# one-time setup
-# 1. Sign up free at https://ngrok.com and grab your authtoken
-# 2. Install ngrok (see https://ngrok.com/download for your OS)
-ngrok config add-authtoken YOUR_TOKEN_HERE
-
-# every time you want a public link
-ngrok http 5000
-```
-
-ngrok prints a `https://something.ngrok-free.app` URL — that's what you
-share or open on your phone. It stays live as long as both the Flask app
-and the `ngrok http 5000` process keep running. Closing either one kills
-the link; you'll get a *different* URL the next time you run `ngrok http
-5000` unless you're on a paid ngrok plan with a reserved domain.
-
-## 4. What happens on upload
-
-`app.py` → `/predict` reads the image, preprocesses it identically to
-training (via `deployment_config.json`, not hardcoded), runs both models,
-and returns both verdicts + confidence + full class probabilities. Nothing
-is written to disk — the uploaded image is only ever held in memory and
-echoed back to the browser as a data URL for display.
-
-## 5. Swapping in the retrained models later
-
-Once you retrain with class weighting, just re-run the `cp` commands from
-step 1 to overwrite the three files in `webapp/models/`, then restart
-`python app.py`. Nothing else changes — same filenames, same
-`deployment_config.json` schema.
-
-## 6. Currently serving the pre-class-weighting models
-
-Right now `webapp/models/` (once you copy them over) holds the biased
-models — expect the app to over-call PNEUMONIA on this run. That's fine for
-testing the plumbing; swap them per step 5 once retraining finishes.
+Full request flow verified end-to-end with a real (randomly-initialized,
+since this sandbox can't download pretrained weights) DenseNet121 model:
+home page render, dashboard render, upload → live inference → Grad-CAM →
+redirect to a real result page → PDF download (valid PDF, correct
+content-type) → error paths (missing file, expired/invalid result ID) all
+returning the right status codes. The real pretrained-weight model will
+behave identically, just with real numbers instead of a randomly-initialized
+network's.

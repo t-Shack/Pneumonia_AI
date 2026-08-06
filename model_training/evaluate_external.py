@@ -1,7 +1,7 @@
 """
 Evaluates every trained model against the EXTERNAL test set (NIH
-ChestX-ray14, prepared by external_dataset_prepare.py) — the actual
-cross-institution generalization check. Never used for training.
+ChestX-ray14, prepared by external_dataset_prepare.py). Never used for
+training.
 
 Run after external_dataset_prepare.py has built config.EXTERNAL_TEST_DIR:
     python evaluate_external.py
@@ -21,8 +21,16 @@ def main():
         return
 
     test_gen = get_external_test_generator()
-    print(f"External test set: {test_gen.samples} images "
-          f"({test_gen.class_indices})")
+    print(f"External test set: {test_gen.samples} images ({test_gen.class_indices})")
+
+    class_counts = {name: 0 for name in config.CLASS_NAMES}
+    for c in test_gen.classes:
+        class_counts[config.CLASS_NAMES[c]] += 1
+    for name, count in class_counts.items():
+        if count == 0:
+            print(f"WARNING: external test set has ZERO {name} images — accuracy/precision/recall "
+                  f"for that class will be meaningless. Check external_dataset_prepare.py's output "
+                  f"and make sure you downloaded both Pneumonia AND No-Finding images from NIH.")
 
     models = discover_models()
     if not models:
@@ -38,10 +46,6 @@ def main():
         json.dump(all_results, f, indent=2)
     print(f"\nSaved external evaluation metrics to {out_path}")
 
-    print("\nPrimary test set vs. external (NIH) test set — compare these "
-          "against outputs/metrics/test_evaluation.json by hand, or just "
-          "look at generate_charts.py's 10_external_comparison.png once "
-          "you've run both evaluate.py and this script.")
     for label, r in all_results.items():
         print(f"\n{label.upper()} (external)")
         print(f"  Test accuracy: {r['test_accuracy']:.4f}")

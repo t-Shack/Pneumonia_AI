@@ -1,6 +1,5 @@
 """
-Evaluates both trained models on the held-out test set: accuracy, loss,
-confusion matrix, sensitivity/specificity/precision/F1, ROC-AUC.
+Evaluates every trained model against the primary (Kermany) test set.
 
 Run after train.py:
     python evaluate.py
@@ -11,25 +10,17 @@ import os
 
 import numpy as np
 from sklearn.metrics import (
-    confusion_matrix,
-    classification_report,
-    roc_curve,
-    roc_auc_score,
-    precision_recall_curve,
+    confusion_matrix, classification_report, roc_curve, roc_auc_score, precision_recall_curve,
 )
 from tensorflow.keras.models import load_model
 
 import config
-import losses  # noqa: F401 — import needed so load_model can deserialize the
-               # custom focal loss registered in losses.py; not called directly here.
+import losses  # noqa: F401 — needed for load_model to deserialize the custom focal loss
 from data_pipeline import get_generators
 
 
 def discover_models():
-    """Finds every pneumonia_<label>.keras in MODELS_DIR, e.g. "sigmoid",
-    "softmax", "sigmoid_augmented" — whatever train.py has produced.
-    Previously this was a hardcoded ("sigmoid", "softmax") tuple, which
-    silently skipped the augmented variant and any other model added later."""
+    """Finds every pneumonia_<label>.keras in MODELS_DIR."""
     models = {}
     if not os.path.isdir(config.MODELS_DIR):
         return models
@@ -48,23 +39,17 @@ def evaluate_model(model_path, test_gen, label):
     loss, acc = model.evaluate(test_gen, verbose=0)
 
     test_gen.reset()
-    y_prob = model.predict(test_gen, verbose=0)          # shape (N, 2)
-    y_true = test_gen.classes                              # shape (N,)
+    y_prob = model.predict(test_gen, verbose=0)
+    y_true = test_gen.classes
     y_pred = np.argmax(y_prob, axis=1)
 
     cm = confusion_matrix(y_true, y_pred)
-    report = classification_report(
-        y_true, y_pred, target_names=config.CLASS_NAMES, output_dict=True
-    )
+    report = classification_report(y_true, y_pred, target_names=config.CLASS_NAMES, output_dict=True)
 
-    # ROC/AUC for the PNEUMONIA class
     pneumonia_idx = config.CLASS_NAMES.index("PNEUMONIA")
     fpr, tpr, _ = roc_curve(y_true, y_prob[:, pneumonia_idx])
     auc = roc_auc_score(y_true, y_prob[:, pneumonia_idx])
-
-    precision_curve, recall_curve, _ = precision_recall_curve(
-        y_true, y_prob[:, pneumonia_idx]
-    )
+    precision_curve, recall_curve, _ = precision_recall_curve(y_true, y_prob[:, pneumonia_idx])
 
     return {
         "label": label,
@@ -74,10 +59,7 @@ def evaluate_model(model_path, test_gen, label):
         "classification_report": report,
         "roc_auc": float(auc),
         "roc_curve": {"fpr": fpr.tolist(), "tpr": tpr.tolist()},
-        "pr_curve": {
-            "precision": precision_curve.tolist(),
-            "recall": recall_curve.tolist(),
-        },
+        "pr_curve": {"precision": precision_curve.tolist(), "recall": recall_curve.tolist()},
     }
 
 

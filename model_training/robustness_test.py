@@ -1,7 +1,11 @@
 """
-Robustness evaluation under controlled image quality degradation, matching
-Chapter 4.4: Gaussian noise, motion blur, contrast reduction, JPEG
-compression artifacts, each at three severities.
+Robustness evaluation under controlled image quality degradation: Gaussian
+noise, motion blur, contrast reduction, JPEG compression, three severities
+each, for every discovered model.
+
+Degradation happens in [0, 1] space, THEN backbone preprocessing is applied
+as the final step — never the other way around, since preprocess_input()
+output isn't in [0, 1] and would break every degradation function's math.
 
 Run after train.py:
     python robustness_test.py
@@ -22,10 +26,6 @@ from data_pipeline import get_raw_test_generator
 from evaluate import discover_models
 from model_architecture import get_preprocess_fn
 
-# ---------------------------------------------------------------------------
-# Degradation functions — operate on a batch of images already rescaled to
-# [0, 1], shape (N, H, W, 3)
-# ---------------------------------------------------------------------------
 
 def add_gaussian_noise(images, sigma_255):
     sigma = sigma_255 / 255.0
@@ -59,28 +59,14 @@ def apply_jpeg_compression(images, quality):
 
 
 DEGRADATIONS = {
-    "gaussian_noise": {
-        "fn": add_gaussian_noise,
-        "levels": {"mild": 5, "moderate": 15, "severe": 25},
-    },
-    "motion_blur": {
-        "fn": add_motion_blur,
-        "levels": {"mild": 1.0, "moderate": 2.0, "severe": 3.5},
-    },
-    "contrast_reduction": {
-        "fn": reduce_contrast,
-        "levels": {"mild": 0.25, "moderate": 0.50, "severe": 0.75},
-    },
-    "jpeg_compression": {
-        "fn": apply_jpeg_compression,
-        "levels": {"mild": 50, "moderate": 25, "severe": 10},
-    },
+    "gaussian_noise": {"fn": add_gaussian_noise, "levels": {"mild": 5, "moderate": 15, "severe": 25}},
+    "motion_blur": {"fn": add_motion_blur, "levels": {"mild": 1.0, "moderate": 2.0, "severe": 3.5}},
+    "contrast_reduction": {"fn": reduce_contrast, "levels": {"mild": 0.25, "moderate": 0.5, "severe": 0.75}},
+    "jpeg_compression": {"fn": apply_jpeg_compression, "levels": {"mild": 50, "moderate": 25, "severe": 10}},
 }
 
 
 def collect_test_images(test_gen):
-    """Pulls the full test set into memory as a single [0, 1]-scaled array
-    (624 images at 224x224x3 is ~360MB as float32 — still comfortable)."""
     test_gen.reset()
     images, labels = [], []
     for _ in range(len(test_gen)):
@@ -91,11 +77,8 @@ def collect_test_images(test_gen):
 
 
 def evaluate_degraded(model, images, labels, degrade_fn, level_value, preprocess_fn):
-    """Degrade in [0, 1] space, THEN apply backbone preprocessing as the
-    final step — never the other way around, since preprocess_input()
-    output isn't in [0, 1] and would break every degradation function's math."""
     degraded = degrade_fn(images, level_value)
-    model_ready = preprocess_fn(degraded * 255.0)  # preprocess_input expects 0-255 scale
+    model_ready = preprocess_fn(degraded * 255.0)
     _, acc = model.evaluate(model_ready, labels, verbose=0)
     return acc
 
@@ -128,12 +111,9 @@ def main():
                 acc = evaluate_degraded(model, images, labels, spec["fn"], level_value, preprocess_fn)
                 drop = baseline_acc - acc
                 model_results["degradations"][degrade_name][level_name] = {
-                    "param": level_value,
-                    "accuracy": float(acc),
-                    "accuracy_drop_pp": float(drop * 100),
+                    "param": level_value, "accuracy": float(acc), "accuracy_drop_pp": float(drop * 100),
                 }
-                print(f"  {level_name:10s} (param={level_value}): "
-                      f"acc={acc:.4f}  (drop {drop*100:.1f} pp)")
+                print(f"  {level_name:10s} (param={level_value}): acc={acc:.4f}  (drop {drop*100:.1f} pp)")
 
         all_results[label] = model_results
 

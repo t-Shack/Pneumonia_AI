@@ -1,6 +1,8 @@
 """
-Grad-CAM (Selvaraju et al., 2017): visualizes which regions of an X-ray the
-model weighted most heavily for its prediction.
+Grad-CAM, generated live for whatever image a user uploads. Duplicated from
+model_training/gradcam.py rather than imported — the webapp is meant to be
+deployable standalone, without a dependency on the training project's
+source tree.
 """
 
 import numpy as np
@@ -9,9 +11,6 @@ from tensorflow import keras
 
 
 def find_backbone_submodel(model):
-    """The backbone is embedded as a nested Functional model. Find it by
-    type (first layer that's itself a keras.Model) rather than by name,
-    since exact names aren't reliable across Keras/backbone versions."""
     for layer in model.layers:
         if isinstance(layer, keras.Model):
             return layer
@@ -19,8 +18,6 @@ def find_backbone_submodel(model):
 
 
 def find_last_conv_layer(backbone):
-    """Last layer with a 4D (batch, H, W, C) output — found by shape, not
-    a hardcoded name."""
     for layer in reversed(backbone.layers):
         if len(layer.output.shape) == 4:
             return layer.name
@@ -28,12 +25,6 @@ def find_last_conv_layer(backbone):
 
 
 def make_gradcam_heatmap(model, image_batch, class_index, last_conv_layer_name=None):
-    """
-    model: full pneumonia model (Input -> backbone -> GAP -> Dropout -> Dense)
-    image_batch: a single preprocessed image, shape (1, H, W, 3)
-    class_index: which output neuron to explain (0=NORMAL, 1=PNEUMONIA)
-    Returns a (H, W) heatmap in [0, 1].
-    """
     backbone = find_backbone_submodel(model)
     last_conv_layer_name = last_conv_layer_name or find_last_conv_layer(backbone)
 
@@ -66,15 +57,12 @@ def make_gradcam_heatmap(model, image_batch, class_index, last_conv_layer_name=N
 
 
 def overlay_heatmap(original_image_0_1, heatmap, alpha=0.4, colormap="jet"):
-    """original_image_0_1: (H, W, 3) in [0, 1]. Returns an (H, W, 3) uint8 image."""
     import matplotlib.cm as cm
 
     h, w = original_image_0_1.shape[:2]
     heatmap_resized = tf.image.resize(heatmap[..., np.newaxis], (h, w)).numpy().squeeze()
-
     cmap = cm.get_cmap(colormap)
     colored_heatmap = cmap(heatmap_resized)[:, :, :3]
-
     overlay = (1 - alpha) * original_image_0_1 + alpha * colored_heatmap
     overlay = np.clip(overlay, 0, 1)
     return (overlay * 255).astype(np.uint8)

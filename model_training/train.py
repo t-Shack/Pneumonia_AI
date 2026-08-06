@@ -1,10 +1,7 @@
 """
 Trains sigmoid and softmax variants on top of a transfer-learned backbone
-(DenseNet121 by default), using a standard two-phase schedule:
-  Phase 1 (warm-up):  backbone frozen, train the new head only, higher LR.
-  Phase 2 (fine-tune): top fraction of backbone unfrozen, whole model
-                        trained together at a much lower LR, with early
-                        stopping.
+(DenseNet121 by default), two-phase: warm-up (frozen backbone) then
+fine-tune (top fraction unfrozen, low LR, early stopping).
 
 Run:
     python train.py
@@ -49,7 +46,6 @@ def train_one(activation: str, train_gen, val_gen, class_weight=None):
         CSVLogger(history_csv_path),
     ]
 
-    # --- Phase 1: warm-up, frozen backbone -----------------------------------
     print(f"\n--- Phase 1: warm-up ({config.WARMUP_EPOCHS} epochs, backbone frozen) ---")
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=config.WARMUP_LR),
@@ -61,7 +57,6 @@ def train_one(activation: str, train_gen, val_gen, class_weight=None):
         class_weight=class_weight, verbose=1,
     )
 
-    # --- Phase 2: fine-tune, top fraction of backbone unfrozen ---------------
     print(f"\n--- Phase 2: fine-tune (up to {config.FINE_TUNE_EPOCHS} epochs, "
           f"top {config.FINE_TUNE_UNFREEZE_FRACTION:.0%} of backbone unfrozen) ---")
     unfreeze_top_layers(model)
@@ -75,11 +70,10 @@ def train_one(activation: str, train_gen, val_gen, class_weight=None):
     )
     elapsed = time.time() - start
 
-    # Merge warm-up + fine-tune history into one continuous record for the charts.
     merged_history = {}
     for key in warmup_history.history:
         merged_history[key] = warmup_history.history[key] + fine_tune_history.history.get(key, [])
-    phase_boundary_epoch = len(warmup_history.history["loss"])  # for annotating charts later
+    phase_boundary_epoch = len(warmup_history.history["loss"])
 
     model_path = os.path.join(config.MODELS_DIR, f"pneumonia_{activation}.{config.MODEL_FORMAT}")
     model.save(model_path)
@@ -104,9 +98,6 @@ def train_one(activation: str, train_gen, val_gen, class_weight=None):
 
 
 def main():
-    # Seed every RNG source for reproducibility across runs (see README —
-    # this is what fixed the sigmoid/softmax "winner" flipping between runs
-    # in the earlier from-scratch pipeline).
     random.seed(config.RANDOM_SEED)
     np.random.seed(config.RANDOM_SEED)
     tf.random.set_seed(config.RANDOM_SEED)
@@ -116,7 +107,7 @@ def main():
 
     deployment_config = {
         "img_size": list(config.IMG_SIZE),
-        "preprocessing": config.BACKBONE,   # webapp/inference.py looks this up
+        "preprocessing": config.BACKBONE,
         "class_indices": train_gen.class_indices,
         "model_format": config.MODEL_FORMAT,
         "backbone": config.BACKBONE,

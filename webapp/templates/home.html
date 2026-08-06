@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}Pneumonia AI — Chest X-ray Analysis{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-text">
+    <p class="eyebrow">CHEST RADIOGRAPHIC ANALYSIS</p>
+    <h1>AI-Based Pneumonia<br>Detection System</h1>
+    <p class="hero-sub">
+      A deep convolutional neural network analyzes chest X-ray images for
+      radiographic signs of pneumonia. All AI processing runs locally on
+      the server &mdash; no image data is sent to any third-party
+      prediction service.
+    </p>
+  </div>
+  <div class="hero-art" aria-hidden="true">
+    <svg viewBox="0 0 320 320" fill="none">
+      <circle cx="160" cy="160" r="150" stroke="#2a3542" stroke-width="1"/>
+      <circle cx="160" cy="160" r="110" stroke="#2a3542" stroke-width="1"/>
+      <path d="M160 70v40M160 250v-40" stroke="#35c7b7" stroke-width="2" stroke-linecap="round"/>
+      <path d="M160 110c-28 0-46 24-50 56-3 24-10 38-22 50 10 10 26 16 42 18M160 110c28 0 46 24 50 56 3 24 10 38 22 50-10 10-26 16-42 18"
+            stroke="#e7ecf1" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M160 110v100" stroke="#e7ecf1" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="118" cy="176" r="5" fill="#e8a33d"/>
+      <circle cx="188" cy="196" r="4" fill="#35c7b7"/>
+    </svg>
+  </div>
+</section>
+
+<section class="upload-section" id="upload">
+  <form action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data" id="upload-form">
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload a chest X-ray image">
+      <input type="file" name="file" id="file-input" accept=".png,.jpg,.jpeg" hidden required>
+      <div class="dropzone-inner" id="dropzone-inner">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M12 16V4M12 4L7 9M12 4l5 5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p class="dropzone-label">Drop chest X-ray here, or <span class="link">Choose X-ray Image</span></p>
+        <p class="dropzone-hint">JPEG, JPG, or PNG, up to 10&nbsp;MB</p>
+      </div>
+      <img id="preview-image" class="preview-image" hidden alt="Preview of uploaded chest X-ray">
+    </div>
+
+    <button type="submit" class="btn-primary" id="analyze-btn" disabled>Analyze Image</button>
+  </form>
+</section>
+
+<section class="features">
+  <p class="eyebrow">KEY FEATURES</p>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">&#9673;</div>
+      <h3>Local AI Processing</h3>
+      <p>Inference runs entirely on the server hosting this application &mdash; no external API calls during analysis.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#9670;</div>
+      <h3>Deep Learning Analysis</h3>
+      <p>A DenseNet121 convolutional network, transfer-learned from ImageNet and fine-tuned on chest radiographs.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#9889;</div>
+      <h3>Fast Prediction</h3>
+      <p>Results, confidence score, and an explainability heatmap in seconds.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#128274;</div>
+      <h3>Secure Handling</h3>
+      <p>Uploaded images are held in memory for analysis only and are never written to disk.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">&#128202;</div>
+      <h3>Validated Performance</h3>
+      <p>Evaluated on a held-out test set, an independent external dataset, and under simulated image degradation.</p>
+    </div>
+  </div>
+</section>
+
+<section class="how-it-works" id="how-it-works">
+  <p class="eyebrow">HOW THE SYSTEM WORKS</p>
+  <div class="steps">
+    <div class="step">
+      <span class="step-number">1</span>
+      <h3>Upload</h3>
+      <p>Provide a chest X-ray image (JPEG or PNG).</p>
+    </div>
+    <div class="step">
+      <span class="step-number">2</span>
+      <h3>Preprocessing</h3>
+      <p>The image is resized and normalized to match the model's training pipeline.</p>
+    </div>
+    <div class="step">
+      <span class="step-number">3</span>
+      <h3>Feature Extraction</h3>
+      <p>A convolutional neural network extracts radiographic features layer by layer.</p>
+    </div>
+    <div class="step">
+      <span class="step-number">4</span>
+      <h3>Prediction</h3>
+      <p>The network classifies the image as Normal or Pneumonia.</p>
+    </div>
+    <div class="step">
+      <span class="step-number">5</span>
+      <h3>Result &amp; Explanation</h3>
+      <p>Confidence score, probability breakdown, and a Grad-CAM heatmap are displayed.</p>
+    </div>
+  </div>
+</section>
+
+<section class="about-model" id="about">
+  <p class="eyebrow">ABOUT THE AI MODEL</p>
+  <div class="about-grid">
+    <div>
+      <h3>Architecture</h3>
+      <p>DenseNet121, pretrained on ImageNet and fine-tuned on chest radiographs via transfer learning, with a lightweight classification head.</p>
+    </div>
+    <div>
+      <h3>Preprocessing</h3>
+      <p>Images are resized to 224&times;224 and normalized using the same ImageNet statistics the backbone was originally trained with.</p>
+    </div>
+    <div>
+      <h3>Purpose</h3>
+      <p>Automated screening support for chest radiographs, evaluated for accuracy, generalization to an independent dataset, and robustness to image quality degradation.</p>
+    </div>
+  </div>
+  <p class="disclaimer-strong">
+    This system is a clinical decision-support tool, not a replacement for
+    professional medical diagnosis. All predictions should be confirmed by
+    a qualified healthcare professional.
+  </p>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}
