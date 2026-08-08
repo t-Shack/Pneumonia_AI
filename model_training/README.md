@@ -76,7 +76,8 @@ python select_best_model.py        # picks the winner for the webapp
 python generate_charts.py          # all charts, including Grad-CAM
 
 # optional but recommended:
-python external_dataset_prepare.py # see top-level README §3 first
+python generate_dataset_mapping.py # see top-level README §3 first
+python download_external_images.py 
 python evaluate_external.py
 python select_best_model.py        # rerun if you switch to "composite" strategy
 python generate_charts.py          # rerun to pick up external charts

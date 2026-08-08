@@ -8,3 +8,4 @@ opencv-python-headless
 Pillow
 scipy
 flask>=3.0
+xhtml2pdf

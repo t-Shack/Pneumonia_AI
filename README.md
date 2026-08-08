@@ -172,7 +172,8 @@ python robustness_test.py       # degradation testing
 python generate_charts.py       # all charts, including Grad-CAM
 
 # optional but recommended:
-python external_dataset_prepare.py    # see §3 first
+python generate_dataset_mapping.py    # see §3 first
+python download_external_images.py
 python evaluate_external.py
 python generate_charts.py             # re-run to pick up external charts too
 

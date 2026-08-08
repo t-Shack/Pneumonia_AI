@@ -17,7 +17,7 @@ TEST_DIR = os.path.join(DATA_DIR, "test")
 # external_dataset_prepare.py. Used ONLY for evaluation, never for training.
 # ---------------------------------------------------------------------------
 NIH_CSV_PATH = os.environ.get("NIH_CSV_PATH", "./data/nih_raw/Data_Entry_2017.csv")
-NIH_RAW_IMAGES_DIR = os.environ.get("NIH_RAW_IMAGES_DIR", "./data/nih_raw/images")
+# NIH_RAW_IMAGES_DIR = os.environ.get("NIH_RAW_IMAGES_DIR", "./data/nih_raw/images")
 EXTERNAL_TEST_DIR = os.environ.get("EXTERNAL_TEST_DIR", "./data/external_nih_chestxray14")
 
 # ---------------------------------------------------------------------------
