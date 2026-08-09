@@ -9,5 +9,6 @@
     "PNEUMONIA": 1
   },
   "model_format": "keras",
-  "backbone": "densenet121"
+  "backbone": "densenet121",
+  "best_model": "softmax"
 }

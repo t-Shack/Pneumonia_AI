@@ -1,146 +1,146 @@
 {
   "sigmoid": {
-    "baseline_accuracy": 0.4086538553237915,
+    "baseline_accuracy": 0.8445512652397156,
     "degradations": {
       "gaussian_noise": {
         "mild": {
           "param": 5,
-          "accuracy": 0.5753205418586731,
-          "accuracy_drop_pp": -16.66666865348816
+          "accuracy": 0.7884615659713745,
+          "accuracy_drop_pp": 5.6089699268341064
         },
         "moderate": {
           "param": 15,
-          "accuracy": 0.5753205418586731,
-          "accuracy_drop_pp": -16.66666865348816
+          "accuracy": 0.7820512652397156,
+          "accuracy_drop_pp": 6.25
         },
         "severe": {
           "param": 25,
-          "accuracy": 0.6089743375778198,
-          "accuracy_drop_pp": -20.032048225402832
+          "accuracy": 0.6987179517745972,
+          "accuracy_drop_pp": 14.58333134651184
         }
       },
       "motion_blur": {
         "mild": {
           "param": 1.0,
-          "accuracy": 0.5336538553237915,
-          "accuracy_drop_pp": -12.5
+          "accuracy": 0.7211538553237915,
+          "accuracy_drop_pp": 12.339740991592407
         },
         "moderate": {
           "param": 2.0,
-          "accuracy": 0.5705128312110901,
-          "accuracy_drop_pp": -16.18589758872986
+          "accuracy": 0.6330128312110901,
+          "accuracy_drop_pp": 21.15384340286255
         },
         "severe": {
           "param": 3.5,
-          "accuracy": 0.45673078298568726,
-          "accuracy_drop_pp": -4.807692766189575
+          "accuracy": 0.625,
+          "accuracy_drop_pp": 21.955126523971558
         }
       },
       "contrast_reduction": {
         "mild": {
           "param": 0.25,
-          "accuracy": 0.38141027092933655,
-          "accuracy_drop_pp": 2.7243584394454956
+          "accuracy": 0.8253205418586731,
+          "accuracy_drop_pp": 1.923072338104248
         },
         "moderate": {
           "param": 0.5,
-          "accuracy": 0.3413461446762085,
-          "accuracy_drop_pp": 6.730771064758301
+          "accuracy": 0.7820512652397156,
+          "accuracy_drop_pp": 6.25
         },
         "severe": {
           "param": 0.75,
-          "accuracy": 0.3285256326198578,
-          "accuracy_drop_pp": 8.012822270393372
+          "accuracy": 0.6810897588729858,
+          "accuracy_drop_pp": 16.346150636672974
         }
       },
       "jpeg_compression": {
         "mild": {
           "param": 50,
-          "accuracy": 0.43589743971824646,
-          "accuracy_drop_pp": -2.7243584394454956
+          "accuracy": 0.7948718070983887,
+          "accuracy_drop_pp": 4.96794581413269
         },
         "moderate": {
           "param": 25,
-          "accuracy": 0.4967948794364929,
-          "accuracy_drop_pp": -8.814102411270142
+          "accuracy": 0.7900640964508057,
+          "accuracy_drop_pp": 5.448716878890991
         },
         "severe": {
           "param": 10,
-          "accuracy": 0.6185897588729858,
-          "accuracy_drop_pp": -20.993590354919434
+          "accuracy": 0.6618589758872986,
+          "accuracy_drop_pp": 18.2692289352417
         }
       }
     }
   },
   "softmax": {
-    "baseline_accuracy": 0.8381410241127014,
+    "baseline_accuracy": 0.8509615659713745,
     "degradations": {
       "gaussian_noise": {
         "mild": {
           "param": 5,
-          "accuracy": 0.7916666865348816,
-          "accuracy_drop_pp": 4.647433757781982
+          "accuracy": 0.8349359035491943,
+          "accuracy_drop_pp": 1.6025662422180176
         },
         "moderate": {
           "param": 15,
-          "accuracy": 0.8205128312110901,
-          "accuracy_drop_pp": 1.7628192901611328
+          "accuracy": 0.8477563858032227,
+          "accuracy_drop_pp": 0.32051801681518555
         },
         "severe": {
           "param": 25,
-          "accuracy": 0.7243589758872986,
-          "accuracy_drop_pp": 11.378204822540283
+          "accuracy": 0.7612179517745972,
+          "accuracy_drop_pp": 8.974361419677734
         }
       },
       "motion_blur": {
         "mild": {
           "param": 1.0,
-          "accuracy": 0.7099359035491943,
-          "accuracy_drop_pp": 12.820512056350708
+          "accuracy": 0.6987179517745972,
+          "accuracy_drop_pp": 15.224361419677734
         },
         "moderate": {
           "param": 2.0,
-          "accuracy": 0.6346153616905212,
-          "accuracy_drop_pp": 20.352566242218018
+          "accuracy": 0.6282051205635071,
+          "accuracy_drop_pp": 22.275644540786743
         },
         "severe": {
           "param": 3.5,
           "accuracy": 0.625,
-          "accuracy_drop_pp": 21.31410241127014
+          "accuracy_drop_pp": 22.59615659713745
         }
       },
       "contrast_reduction": {
         "mild": {
           "param": 0.25,
-          "accuracy": 0.8157051205635071,
-          "accuracy_drop_pp": 2.2435903549194336
+          "accuracy": 0.8301281929016113,
+          "accuracy_drop_pp": 2.0833373069763184
         },
         "moderate": {
           "param": 0.5,
-          "accuracy": 0.7644230723381042,
-          "accuracy_drop_pp": 7.371795177459717
+          "accuracy": 0.7756410241127014,
+          "accuracy_drop_pp": 7.53205418586731
         },
         "severe": {
           "param": 0.75,
-          "accuracy": 0.6714743375778198,
-          "accuracy_drop_pp": 16.66666865348816
+          "accuracy": 0.6682692170143127,
+          "accuracy_drop_pp": 18.269234895706177
         }
       },
       "jpeg_compression": {
         "mild": {
           "param": 50,
-          "accuracy": 0.7820512652397156,
-          "accuracy_drop_pp": 5.608975887298584
+          "accuracy": 0.7788461446762085,
+          "accuracy_drop_pp": 7.211542129516602
         },
         "moderate": {
           "param": 25,
-          "accuracy": 0.7964743375778198,
-          "accuracy_drop_pp": 4.166668653488159
+          "accuracy": 0.7820512652397156,
+          "accuracy_drop_pp": 6.8910300731658936
         },
         "severe": {
           "param": 10,
           "accuracy": 0.6875,
-          "accuracy_drop_pp": 15.064102411270142
+          "accuracy_drop_pp": 16.34615659713745
         }
       }
     }

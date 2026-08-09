@@ -37,16 +37,19 @@ DASHBOARD_CHARTS = [
     ("05_model_comparison.png", "Sigmoid vs. softmax — test accuracy & loss"),
     ("06_robustness_degradation.png", "Robustness under image degradation"),
     ("07_dataset_composition.png", "Dataset class distribution"),
-    ("10_gradcam.png", "Grad-CAM samples"),
-    ("11_external_comparison.png", "Primary vs. external test set"),
+    ("09_sample_predictions_sigmoid.png", "Sample predictions — sigmoid"),
+    ("10_sample_predictions_softmax.png", "Sample predictions — softmax"),
+    ("11_gradcam_sigmoid.png", "Grad-CAM samples — sigmoid"),
+    ("12_gradcam_softmax.png", "Grad-CAM samples — softmax"),
+    ("13_external_comparison.png", "Primary vs. external test set"),
 ]
 
 # Institution / footer content — replace these placeholders with the real
 # strings before deploying.
 INSTITUTION = {
-    "university": "[University Name]",
-    "department": "[Department]",
-    "researcher": "[Researcher's Name]",
-    "email": "[contact@email.com]",
-    "phone": "[Phone Number]",
+    "university": "Nnamdi Azikiwe University, Awka",
+    "department": "Department of Electronics and Computer Engineering",
+    "researcher": "Engr. Mokwe Nkiru C.",
+    "email": "nknokwe@gmail.com",
+    "phone": "+2348036753311",
 }

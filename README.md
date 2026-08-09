@@ -163,12 +163,14 @@ limitation, not a flaw in your design.
 
 ```bash
 cd model_training
-python -m venv venv && source venv/bin/activate      # Windows: venv\Scripts\activate
+python -m venv venv
+source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 python train.py                 # sigmoid + softmax, warm-up + fine-tune each
 python evaluate.py              # primary test set
 python robustness_test.py       # degradation testing
+python select_best_model.py
 python generate_charts.py       # all charts, including Grad-CAM
 
 # optional but recommended:

@@ -46,9 +46,11 @@ def predict():
         result = inference.predict_with_gradcam(file.stream)
     except FileNotFoundError as e:
         return render_template("home.html", institution=config.INSTITUTION, error=str(e)), 500
-    except Exception:
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return render_template("home.html", institution=config.INSTITUTION,
-                                error="Couldn't read that as an image."), 400
+                                error=f"Couldn't read that as an image. ({type(e).__name__}: {e})"), 400
 
     result_id = result_store.save_result(result)
     return redirect(url_for("show_result", result_id=result_id))

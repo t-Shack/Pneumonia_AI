@@ -5,6 +5,7 @@ deployable standalone, without a dependency on the training project's
 source tree.
 """
 
+import matplotlib
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -61,7 +62,7 @@ def overlay_heatmap(original_image_0_1, heatmap, alpha=0.4, colormap="jet"):
 
     h, w = original_image_0_1.shape[:2]
     heatmap_resized = tf.image.resize(heatmap[..., np.newaxis], (h, w)).numpy().squeeze()
-    cmap = cm.get_cmap(colormap)
+    cmap = matplotlib.colormaps.get_cmap(colormap) if hasattr(matplotlib.colormaps, 'get_cmap') else matplotlib.colormaps[colormap]
     colored_heatmap = cmap(heatmap_resized)[:, :, :3]
     overlay = (1 - alpha) * original_image_0_1 + alpha * colored_heatmap
     overlay = np.clip(overlay, 0, 1)

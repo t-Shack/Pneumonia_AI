@@ -205,7 +205,7 @@ def _pick_balanced_samples(test_gen, per_class):
     return np.array(images), true_idx, idx_to_class
 
 
-def chart_sample_predictions(n=12, model_label="sigmoid"):
+def chart_sample_predictions_sigmoid(n=12, model_label="sigmoid"):
     model_path = os.path.join(config.MODELS_DIR, f"pneumonia_{model_label}.keras")
     if not os.path.exists(model_path):
         print(f"{model_path} not found — skipping sample predictions chart.")
@@ -232,10 +232,40 @@ def chart_sample_predictions(n=12, model_label="sigmoid"):
     for j in range(n, len(axes)):
         axes[j].axis("off")
     fig.tight_layout()
-    _save(fig, "09_sample_predictions.png")
+    _save(fig, "09_sample_predictions_sigmoid.png")
 
 
-def chart_gradcam(n=8, model_label="sigmoid"):
+def chart_sample_predictions_softmax(n=12, model_label="softmax"):
+    model_path = os.path.join(config.MODELS_DIR, f"pneumonia_{model_label}.keras")
+    if not os.path.exists(model_path):
+        print(f"{model_path} not found — skipping sample predictions chart.")
+        return
+    model = load_model(model_path)
+    preprocess_fn = get_preprocess_fn()
+    raw_test_gen = get_raw_test_generator()
+    per_class = n // len(raw_test_gen.class_indices)
+    raw_images, true_idx, idx_to_class = _pick_balanced_samples(raw_test_gen, per_class)
+    model_ready = preprocess_fn(raw_images.copy() * 255.0)
+    preds = model.predict(model_ready, verbose=0)
+    n = len(raw_images)
+    cols = 4; rows = int(np.ceil(n / cols))
+    fig, axes = plt.subplots(rows, cols, figsize=(cols * 3, rows * 3))
+    axes = np.array(axes).flatten()
+    for i in range(n):
+        pred_idx = int(np.argmax(preds[i]))
+        confidence = preds[i][pred_idx]
+        correct = true_idx[i] == pred_idx
+        axes[i].imshow(raw_images[i]); axes[i].axis("off")
+        color = "green" if correct else "red"
+        axes[i].set_title(f"True: {idx_to_class[true_idx[i]]}\nPred: {idx_to_class[pred_idx]} ({confidence:.2f})",
+                           color=color, fontsize=9)
+    for j in range(n, len(axes)):
+        axes[j].axis("off")
+    fig.tight_layout()
+    _save(fig, "10_sample_predictions_softmax.png")
+
+
+def chart_gradcam_sigmoid(n=8, model_label="sigmoid"):
     from gradcam import make_gradcam_heatmap, overlay_heatmap
     model_path = os.path.join(config.MODELS_DIR, f"pneumonia_{model_label}.keras")
     if not os.path.exists(model_path):
@@ -266,7 +296,41 @@ def chart_gradcam(n=8, model_label="sigmoid"):
         axes[j].axis("off")
     fig.suptitle(f"Grad-CAM — {model_label}", y=1.02)
     fig.tight_layout()
-    _save(fig, "10_gradcam.png")
+    _save(fig, "11_gradcam_sigmoid.png")
+
+
+def chart_gradcam_softmax(n=8, model_label="softmax"):
+    from gradcam import make_gradcam_heatmap, overlay_heatmap
+    model_path = os.path.join(config.MODELS_DIR, f"pneumonia_{model_label}.keras")
+    if not os.path.exists(model_path):
+        print(f"{model_path} not found — skipping Grad-CAM chart.")
+        return
+    model = load_model(model_path)
+    preprocess_fn = get_preprocess_fn()
+    raw_test_gen = get_raw_test_generator()
+    per_class = n // len(raw_test_gen.class_indices)
+    raw_images, true_idx, idx_to_class = _pick_balanced_samples(raw_test_gen, per_class)
+    n = len(raw_images)
+    cols = 4; rows = int(np.ceil(n / cols))
+    fig, axes = plt.subplots(rows, cols, figsize=(cols * 3, rows * 3))
+    axes = np.array(axes).flatten()
+    for i in range(n):
+        img_0_1 = raw_images[i]
+        model_ready = preprocess_fn(img_0_1[np.newaxis].copy() * 255.0)
+        pred = model.predict(model_ready, verbose=0)[0]
+        pred_idx = int(np.argmax(pred))
+        heatmap = make_gradcam_heatmap(model, model_ready, class_index=pred_idx)
+        overlay = overlay_heatmap(img_0_1, heatmap)
+        axes[i].imshow(overlay); axes[i].axis("off")
+        correct = true_idx[i] == pred_idx
+        color = "green" if correct else "red"
+        axes[i].set_title(f"True: {idx_to_class[true_idx[i]]} | Pred: {idx_to_class[pred_idx]} ({pred[pred_idx]:.2f})",
+                           color=color, fontsize=8)
+    for j in range(n, len(axes)):
+        axes[j].axis("off")
+    fig.suptitle(f"Grad-CAM — {model_label}", y=1.02)
+    fig.tight_layout()
+    _save(fig, "12_gradcam_softmax.png")
 
 
 def chart_external_comparison(primary_results, external_results):
@@ -285,7 +349,7 @@ def chart_external_comparison(primary_results, external_results):
         ax.text(i - width / 2, p + 0.01, f"{p:.3f}", ha="center", fontsize=8)
         ax.text(i + width / 2, e + 0.01, f"{e:.3f}", ha="center", fontsize=8)
     fig.tight_layout()
-    _save(fig, "11_external_comparison.png")
+    _save(fig, "13_external_comparison.png")
 
 
 def main():
@@ -314,8 +378,10 @@ def main():
     else:
         print("Skipping robustness chart — run robustness_test.py first.")
 
-    chart_sample_predictions()
-    chart_gradcam()
+    chart_sample_predictions_sigmoid()
+    chart_sample_predictions_softmax()
+    chart_gradcam_sigmoid()
+    chart_gradcam_softmax()
 
     if os.path.exists(external_path):
         external_results = load_json(external_path)

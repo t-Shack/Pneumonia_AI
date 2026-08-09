@@ -89,5 +89,5 @@ CV_FOLDS = 5
 # "composite" -> weighted blend of primary accuracy, external accuracy, and
 #                mean robustness accuracy (use once you have external +
 #                robustness results for every candidate model)
-BEST_MODEL_STRATEGY = "accuracy"
+BEST_MODEL_STRATEGY = "composite"
 COMPOSITE_WEIGHTS = {"primary": 0.5, "external": 0.3, "robustness": 0.2}
