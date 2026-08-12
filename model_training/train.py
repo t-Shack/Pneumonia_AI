@@ -31,11 +31,32 @@ def compute_class_weights(train_gen):
     return weight_dict
 
 
-def train_one(activation: str, train_gen, val_gen, class_weight=None):
+def compute_focal_alpha(train_gen):
+    """Per-class alpha for the focal loss, in config.CLASS_NAMES order —
+    the class-balanced fix (see losses.py). Uses the same inverse-frequency
+    weighting as compute_class_weights(), then normalizes to sum to 1 so
+    the values read as alpha_t the way the original focal loss paper
+    defines it (higher weight for the rarer class)."""
+    if config.FOCAL_ALPHA_STRATEGY == "fixed":
+        return config.FOCAL_ALPHA_FIXED
+
+    labels = train_gen.classes
+    weights = compute_class_weight(class_weight="balanced", classes=np.unique(labels), y=labels)
+    weights = weights / weights.sum()  # normalize to sum to 1, e.g. [0.743, 0.257]
+
+    # Order to match config.CLASS_NAMES / class_indices, not assume np.unique's order happens to match.
+    idx_to_class = {v: k for k, v in train_gen.class_indices.items()}
+    class_to_weight = {idx_to_class[i]: float(w) for i, w in zip(np.unique(labels), weights)}
+    alpha = [class_to_weight[name] for name in config.CLASS_NAMES]
+    print(f"Class-balanced focal alpha ({dict(zip(config.CLASS_NAMES, alpha))})")
+    return alpha
+
+
+def train_one(activation: str, train_gen, val_gen, class_weight=None, focal_alpha=None):
     print(f"\n{'='*70}\nTraining {activation.upper()} — {config.BACKBONE}\n{'='*70}")
 
     model = build_model(activation)
-    loss_fn = losses.get_loss(config.LOSS_FUNCTION, gamma=config.FOCAL_GAMMA, alpha=config.FOCAL_ALPHA)
+    loss_fn = losses.get_loss(config.LOSS_FUNCTION, gamma=config.FOCAL_GAMMA, alpha=focal_alpha)
 
     history_csv_path = os.path.join(config.HISTORY_DIR, f"history_{activation}.csv")
     callbacks = [
@@ -93,6 +114,7 @@ def train_one(activation: str, train_gen, val_gen, class_weight=None):
         "best_val_loss": min(merged_history["val_loss"]),
         "best_val_accuracy": max(merged_history["val_accuracy"]),
         "loss_function": config.LOSS_FUNCTION,
+        "focal_alpha_used": focal_alpha,
         "class_weight_applied": class_weight,
     }
 
@@ -116,10 +138,11 @@ def main():
         json.dump(deployment_config, f, indent=2)
 
     class_weight = compute_class_weights(train_gen) if config.USE_CLASS_WEIGHTS else None
+    focal_alpha = compute_focal_alpha(train_gen) if config.LOSS_FUNCTION == "focal" else None
 
     results = []
     for activation in ("sigmoid", "softmax"):
-        results.append(train_one(activation, train_gen, val_gen, class_weight=class_weight))
+        results.append(train_one(activation, train_gen, val_gen, class_weight=class_weight, focal_alpha=focal_alpha))
 
     with open(os.path.join(config.OUTPUT_DIR, "training_summary.json"), "w") as f:
         json.dump(results, f, indent=2)

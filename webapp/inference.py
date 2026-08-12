@@ -81,6 +81,21 @@ def get_model_label():
     return _model_label
 
 
+def decide_class(probs: np.ndarray, class_indices: dict, threshold) -> int:
+    """Argmax was shown to badly favor PNEUMONIA (NORMAL recall ~61% on the
+    primary test set despite strong ROC-AUC, and in real testing 3/3 actual
+    normal X-rays were misclassified) — a calibration problem, not a
+    model-quality one. If deployment_config.json has a calibrated
+    "decision_threshold" (written by model_training/select_threshold.py),
+    use it directly on the PNEUMONIA probability instead of naive argmax.
+    Falls back to argmax if no threshold has been calibrated yet."""
+    pneumonia_idx = class_indices["PNEUMONIA"]
+    normal_idx = class_indices["NORMAL"]
+    if threshold is not None:
+        return pneumonia_idx if probs[pneumonia_idx] >= threshold else normal_idx
+    return int(np.argmax(probs))
+
+
 def confidence_band(confidence: float) -> str:
     for threshold, band in config.CONFIDENCE_BANDS:
         if confidence >= threshold:
@@ -144,7 +159,7 @@ def predict_with_gradcam(file_stream):
     model_ready = preprocess_for_model(img_0_1)
 
     probs = model.predict(model_ready, verbose=0)[0]
-    pred_idx = int(np.argmax(probs))
+    pred_idx = decide_class(probs, class_indices, deployment_config.get("decision_threshold"))
     predicted_class = idx_to_class[pred_idx]
     confidence = float(probs[pred_idx])
 
@@ -176,6 +191,7 @@ def predict_with_gradcam(file_stream):
         "backbone": deployment_config.get("backbone", "unknown"),
         "input_resolution": f"{deployment_config['img_size'][0]}x{deployment_config['img_size'][1]}",
         "original_resolution": f"{original_resolution[0]}x{original_resolution[1]}",
+        "decision_threshold": deployment_config.get("decision_threshold"),
     }
 
 

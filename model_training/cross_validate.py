@@ -26,6 +26,7 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import config
 import losses
 from model_architecture import build_model, unfreeze_top_layers, get_preprocess_fn
+from train import compute_focal_alpha
 
 
 def build_file_dataframe():
@@ -56,7 +57,8 @@ def run_fold(activation, train_df, val_df, fold_idx, preprocess_fn):
     )
 
     model = build_model(activation)
-    loss_fn = losses.get_loss(config.LOSS_FUNCTION, gamma=config.FOCAL_GAMMA, alpha=config.FOCAL_ALPHA)
+    focal_alpha = compute_focal_alpha(train_gen) if config.LOSS_FUNCTION == "focal" else None
+    loss_fn = losses.get_loss(config.LOSS_FUNCTION, gamma=config.FOCAL_GAMMA, alpha=focal_alpha)
 
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=config.WARMUP_LR),
                   loss=loss_fn, metrics=["accuracy"])

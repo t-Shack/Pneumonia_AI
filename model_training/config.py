@@ -65,7 +65,12 @@ EARLY_STOPPING_MONITOR = "val_loss"
 # ---------------------------------------------------------------------------
 LOSS_FUNCTION = "focal"
 FOCAL_GAMMA = 2.0
-FOCAL_ALPHA = 0.25
+# "class_balanced" (recommended, fixes the NORMAL-recall problem — alpha is
+#   computed per-class from the actual training distribution, higher for
+#   the rarer class) or "fixed" (old behavior: one flat alpha for every
+#   class, kept only for an ablation comparison if you want one).
+FOCAL_ALPHA_STRATEGY = "class_balanced"
+FOCAL_ALPHA_FIXED = 0.25  # only used if FOCAL_ALPHA_STRATEGY == "fixed"
 USE_CLASS_WEIGHTS = False
 
 OPTIMIZER = "adam"
@@ -83,11 +88,20 @@ CLASS_NAMES = ["NORMAL", "PNEUMONIA"]
 CV_FOLDS = 5
 
 # ---------------------------------------------------------------------------
+# Decision threshold calibration (see select_threshold.py)
+# ---------------------------------------------------------------------------
+# Chosen via Youden's J statistic (max of tpr - fpr) on the VALIDATION set —
+# never the test set, since choosing a threshold from test data and then
+# reporting test accuracy at that threshold would bias the very number
+# being reported.
+THRESHOLD_SELECTION_METHOD = "youdens_j"
+
+# ---------------------------------------------------------------------------
 # Automatic best-model selection (see select_best_model.py)
 # ---------------------------------------------------------------------------
 # "accuracy"  -> primary test accuracy alone, ROC-AUC as tiebreaker
 # "composite" -> weighted blend of primary accuracy, external accuracy, and
 #                mean robustness accuracy (use once you have external +
 #                robustness results for every candidate model)
-BEST_MODEL_STRATEGY = "composite"
+BEST_MODEL_STRATEGY = "accuracy"
 COMPOSITE_WEIGHTS = {"primary": 0.5, "external": 0.3, "robustness": 0.2}

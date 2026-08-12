@@ -1,6 +1,57 @@
 # Model Training — Technical Notes (v2, transfer learning)
 
-## The focal loss bug fix (read this first if retraining sigmoid)
+## Two fixes for the NORMAL-recall problem (read this first if retraining)
+
+Real-world testing surfaced it plainly: 3 real normal X-rays, all flagged
+as pneumonia. The numbers already showed why — NORMAL recall was ~61% on
+the primary test set despite a strong ROC-AUC (0.94–0.97), which is the
+signature of a model that ranks cases well but has its decision cutoff in
+the wrong place, compounded by a real gap in the loss function. Two fixes,
+addressing both:
+
+**Fix 1 — class-balanced focal alpha (`losses.py`, needs a retrain).**
+The original focal loss paper's alpha is written `alpha_t` specifically
+because it's supposed to take a *different* value per class — higher for
+the rarer one — to directly counteract class imbalance. This
+implementation previously used one flat `alpha=0.25` for every example
+regardless of class, which only provided the "focus on hard examples"
+benefit (via gamma) and none of the class-balancing benefit alpha exists
+for. Fixed: `train.py`'s `compute_focal_alpha()` now computes a per-class
+alpha from the actual training distribution (e.g. `[0.743, 0.257]` for
+`[NORMAL, PNEUMONIA]`, mirroring the inverse-frequency logic already used
+for `class_weight`), and `losses.py` applies it per-class. Verified
+numerically: a NORMAL example misclassified now costs ~2.9x more than an
+equivalent PNEUMONIA misclassification (matching the alpha ratio exactly),
+versus identical cost either way under the old flat alpha. Toggle via
+`config.FOCAL_ALPHA_STRATEGY` (`"class_balanced"` default, `"fixed"` for
+the old behavior if you want an ablation comparison in the paper).
+
+**Fix 2 — calibrated decision threshold (`select_threshold.py`, no retrain
+needed, ships immediately).** Independent of the alpha problem: even a
+well-trained model's naive argmax/0.5 cutoff isn't necessarily the right
+operating point. Computed directly from your actual results: at Youden's J
+(the threshold maximizing `tpr - fpr`), NORMAL recall goes from 61.5% to
+94.4% for softmax (83.6%→90.0% would be sigmoid's equivalent), at the cost
+of PNEUMONIA recall dropping from 99.2% to 90.0% — a real, deliberate
+tradeoff, not a free lunch. Selected on the **validation** set, never the
+test set (picking a threshold from test data and then reporting test
+accuracy at that threshold would quietly bias the very number being
+reported). Run after `select_best_model.py`:
+```bash
+python select_threshold.py
+```
+Writes `"decision_threshold"` into `deployment_config.json` (webapp reads
+it automatically) and `outputs/metrics/final_evaluation.json` — cite
+*that* file's numbers as your final, as-deployed results, not the
+argmax-based `test_evaluation.json` (which exists for model comparison,
+not final reporting).
+
+Both fixes address the same symptom from different angles and are meant to
+stack — retrain with the fixed alpha, then still run threshold calibration
+on top of that retrained model, since even a better-trained model benefits
+from a properly chosen operating point.
+
+## The earlier focal-loss collapse bug fix (already applied, for reference)
 
 Earlier training run: sigmoid hit `val_loss=7e-13` with `val_accuracy=54.6%`
 — loss near-perfect, accuracy near-random, simultaneously. Root cause:
@@ -73,6 +124,7 @@ python train.py                    # sigmoid + softmax, warm-up + fine-tune
 python evaluate.py                 # primary test set
 python robustness_test.py          # degradation testing
 python select_best_model.py        # picks the winner for the webapp
+python select_threshold.py         # NEW — calibrates the decision cutoff
 python generate_charts.py          # all charts, including Grad-CAM
 
 # optional but recommended:
@@ -80,6 +132,7 @@ python generate_dataset_mapping.py # see top-level README §3 first
 python download_external_images.py 
 python evaluate_external.py
 python select_best_model.py        # rerun if you switch to "composite" strategy
+python select_threshold.py         # rerun if the winning model changed
 python generate_charts.py          # rerun to pick up external charts
 
 # optional, expensive:
@@ -89,20 +142,32 @@ python cross_validate.py --activation softmax --folds 5
 
 ## Testing performed on this codebase before delivery
 
-Everything below was actually run, not just reviewed:
-- Every file: `py_compile` clean.
-- Sigmoid-head + fixed focal loss trained end-to-end on a toy separable
-  problem: 97.5% val accuracy (vs. the ~54% collapse under the old loss).
-- Full model build → compile → one training step → phase-2 unfreeze →
-  save → reload → predictions verified identical before/after reload.
-- Grad-CAM: backbone/layer auto-discovery, heatmap generation, and overlay
-  all verified working, including after a save/load round trip.
-- Every robustness degradation function verified to compose correctly with
-  DenseNet preprocessing (no NaNs, sane output ranges).
-- `select_best_model.py` verified against synthetic data reproducing the
-  exact zero-support external-evaluation scenario from the real run —
-  confirmed it correctly excludes that component rather than trusting it.
+This round, tested against your actual real trained model files (not just
+synthetic/random-init weights):
+- Loaded both real `.keras` files directly: confirmed genuine DenseNet121
+  backbone (7,039,554 params, 427 layers), correct output shapes, sigmoid
+  outputs correctly independent (sum ≠ 1) vs softmax correctly summing to
+  exactly 1.0, and Grad-CAM producing a real, varying heatmap on the actual
+  trained weights.
+- Class-balanced alpha verified numerically: a NORMAL misclassification
+  costs exactly the alpha ratio (2.891x) more than an equivalent PNEUMONIA
+  one; flat-alpha mode still produces symmetric costs, confirming the
+  toggle works both ways.
+- `select_threshold.py`'s core logic (`find_threshold`,
+  `evaluate_at_threshold`) unit-tested against synthetic data matching your
+  real class distribution — confirmed internal consistency (recall computed
+  from the ROC curve matches recall recomputed from the resulting confusion
+  matrix at that same threshold).
+
+Earlier rounds (still valid, not re-run this pass unless noted above):
+every file `py_compile` clean; sigmoid-head + fixed focal loss trained
+end-to-end on a toy problem (97.5% val accuracy vs. the ~54% collapse under
+the original bug); full model build→compile→train→unfreeze→save→reload
+cycle verified identical predictions before/after reload; every robustness
+degradation function verified to compose correctly with DenseNet
+preprocessing; `select_best_model.py` verified against synthetic data
+reproducing the exact zero-support external-evaluation scenario.
 
 Not testable in this environment: actual ImageNet weight download (sandbox
-network can't reach the pretrained-weight host) and anything requiring your
-real dataset — both will work normally on your machine.
+network can't reach the pretrained-weight host) — not needed this round
+since you provided the already-trained weights directly.

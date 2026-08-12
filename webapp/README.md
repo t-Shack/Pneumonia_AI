@@ -30,6 +30,15 @@ notes (unchanged) — `ngrok http 5000` in a second terminal.
 
 ## 3. What's new in this version
 
+- **Calibrated decision threshold.** Real-world testing found 3/3 actual
+  normal X-rays misclassified as pneumonia — the model's naive argmax
+  cutoff was badly placed (NORMAL recall ~61% despite strong ROC-AUC).
+  `inference.py`'s `decide_class()` now uses `deployment_config.json`'s
+  `"decision_threshold"` (written by `model_training/select_threshold.py`)
+  instead of argmax, when present — falls back to argmax automatically if
+  that field is missing, so this doesn't break on an older
+  `deployment_config.json`. Shown transparently on the results page and in
+  the PDF report ("Decision Threshold: 0.XXX (calibrated)").
 - **Single model, not a side-by-side comparison.** The dual sigmoid/softmax
   view is gone from the main app — that comparison still lives in the paper
   and the `/dashboard` charts, but the product now ships one model.
