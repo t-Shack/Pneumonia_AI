@@ -10,5 +10,6 @@
   },
   "model_format": "keras",
   "backbone": "densenet121",
-  "best_model": "softmax"
+  "best_model": "softmax",
+  "decision_threshold": 0.9651537537574768
 }

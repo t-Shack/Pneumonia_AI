@@ -6,10 +6,14 @@
     "model_path": "./outputs/models/pneumonia_sigmoid.keras",
     "warmup_epochs": 5,
     "fine_tune_epochs": 13,
-    "training_time_seconds": 2153.4,
-    "best_val_loss": 0.002975968411192298,
-    "best_val_accuracy": 0.9884615540504456,
+    "training_time_seconds": 2321.0,
+    "best_val_loss": 0.005028463900089264,
+    "best_val_accuracy": 0.9807692170143127,
     "loss_function": "focal",
+    "focal_alpha_used": [
+      0.7429378531073446,
+      0.2570621468926554
+    ],
     "class_weight_applied": null
   },
   {
@@ -19,10 +23,14 @@
     "model_path": "./outputs/models/pneumonia_softmax.keras",
     "warmup_epochs": 5,
     "fine_tune_epochs": 19,
-    "training_time_seconds": 2801.8,
-    "best_val_loss": 0.0029464748222380877,
-    "best_val_accuracy": 0.9846153855323792,
+    "training_time_seconds": 2953.9,
+    "best_val_loss": 0.004718538839370012,
+    "best_val_accuracy": 0.9769230484962463,
     "loss_function": "focal",
+    "focal_alpha_used": [
+      0.7429378531073446,
+      0.2570621468926554
+    ],
     "class_weight_applied": null
   }
 ]
