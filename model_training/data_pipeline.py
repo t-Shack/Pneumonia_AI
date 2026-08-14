@@ -50,6 +50,16 @@ def get_generators(augmented: bool = None):
     return train_generator, val_generator, test_generator
 
 
+def get_validation_eval_generator():
+    preprocess_fn = get_preprocess_fn()
+    datagen = ImageDataGenerator(preprocessing_function=preprocess_fn, validation_split=config.VALIDATION_SPLIT)
+    return datagen.flow_from_directory(
+        config.TRAIN_DIR, target_size=config.IMG_SIZE, batch_size=config.BATCH_SIZE,
+        class_mode="categorical", classes=config.CLASS_NAMES,
+        subset="validation", shuffle=False,
+    )
+
+
 def get_raw_test_generator():
     datagen = ImageDataGenerator(rescale=1.0 / 255)
     return datagen.flow_from_directory(

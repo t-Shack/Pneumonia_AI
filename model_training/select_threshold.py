@@ -31,7 +31,7 @@ from tensorflow.keras.models import load_model
 
 import config
 import losses  # noqa: F401 — needed for load_model to deserialize focal loss
-from data_pipeline import get_generators
+from data_pipeline import get_generators, get_validation_eval_generator
 
 
 def find_threshold(y_true, y_prob_pneumonia, method="youdens_j"):
@@ -42,6 +42,31 @@ def find_threshold(y_true, y_prob_pneumonia, method="youdens_j"):
     else:
         raise ValueError(f"Unknown THRESHOLD_SELECTION_METHOD: {method!r}")
     return float(thresholds[best_idx]), float(tpr[best_idx]), float(1 - fpr[best_idx])
+
+
+def sanity_check_threshold(threshold, normal_recall, pneumonia_recall):
+    """Cheap insurance against exactly the failure mode that shipped a
+    ~0.97 threshold earlier: Youden's J found a spurious spike on a small,
+    misaligned validation sample rather than a genuine balance point — you
+    could tell because BOTH recalls were mediocre (61%/46%) even on the
+    data the threshold was chosen from, which a real balanced point
+    shouldn't produce. Flags (doesn't silently accept) anything that looks
+    like the same pattern."""
+    warnings = []
+    if threshold < 0.15 or threshold > 0.85:
+        warnings.append(
+            f"Threshold {threshold:.3f} is extreme (outside [0.15, 0.85]) — unusual for a "
+            f"genuinely balanced operating point. Double-check the validation predictions/labels "
+            f"are correctly aligned before trusting this."
+        )
+    if normal_recall < 0.5 or pneumonia_recall < 0.5:
+        warnings.append(
+            f"NORMAL recall={normal_recall:.1%} and PNEUMONIA recall={pneumonia_recall:.1%} at this "
+            f"threshold — a real balance point shouldn't leave BOTH classes doing this poorly on the "
+            f"very data the threshold was selected from. Likely a data/alignment problem, not a "
+            f"genuine best-available tradeoff."
+        )
+    return warnings
 
 
 def evaluate_at_threshold(y_true, y_prob_pneumonia, threshold):
@@ -72,11 +97,13 @@ def main():
     print(f"Calibrating decision threshold for the winning model: {label}")
     model = load_model(model_path)
 
-    train_gen, val_gen, test_gen = get_generators()
-    class_indices = train_gen.class_indices
+    _, _, test_gen = get_generators()
+    val_gen = get_validation_eval_generator()
+    class_indices = val_gen.class_indices
     pneumonia_idx = class_indices["PNEUMONIA"]
 
-    # Threshold chosen on VALIDATION data only.
+    # Threshold chosen on VALIDATION data only (non-shuffled generator —
+    # see get_validation_eval_generator()'s docstring for why that matters).
     val_gen.reset()
     y_val_prob = model.predict(val_gen, verbose=0)
     y_val_true = val_gen.classes
@@ -86,6 +113,16 @@ def main():
     print(f"\nSelected threshold ({config.THRESHOLD_SELECTION_METHOD}, on validation data): {threshold:.4f}")
     print(f"  Validation NORMAL recall at this threshold:    {val_normal_recall:.1%}")
     print(f"  Validation PNEUMONIA recall at this threshold: {val_pneumonia_recall:.1%}")
+
+    warnings = sanity_check_threshold(threshold, val_normal_recall, val_pneumonia_recall)
+    if warnings:
+        print("\n*** SANITY CHECK FAILED — refusing to write this threshold automatically ***")
+        for w in warnings:
+            print(f"  - {w}")
+        print("\nNot updating deployment_config.json. Investigate before rerunning — if you're "
+              "confident the threshold is actually fine despite this warning, you can bypass this "
+              "check by editing deployment_config.json's \"decision_threshold\" by hand.")
+        return
 
     # Report on the test set — informational only, NOT used to pick the threshold.
     test_gen.reset()
