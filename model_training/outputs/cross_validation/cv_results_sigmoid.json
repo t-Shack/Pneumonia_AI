@@ -1,0 +1,43 @@
+{
+  "activation": "sigmoid",
+  "folds": 5,
+  "fold_results": [
+    {
+      "fold": 1,
+      "val_accuracy": 0.9568965517241379,
+      "val_macro_f1": 0.9462293595937329,
+      "val_log_loss": 0.22959682320349897
+    },
+    {
+      "fold": 2,
+      "val_accuracy": 0.9511025886864813,
+      "val_macro_f1": 0.9389072841977597,
+      "val_log_loss": 0.21106155069801133
+    },
+    {
+      "fold": 3,
+      "val_accuracy": 0.9693192713326941,
+      "val_macro_f1": 0.9612051329737772,
+      "val_log_loss": 0.3604869555045714
+    },
+    {
+      "fold": 4,
+      "val_accuracy": 0.9702780441035475,
+      "val_macro_f1": 0.962375707644598,
+      "val_log_loss": 0.30016010454378705
+    },
+    {
+      "fold": 5,
+      "val_accuracy": 0.9693192713326941,
+      "val_macro_f1": 0.9612051329737772,
+      "val_log_loss": 0.3265694500991897
+    }
+  ],
+  "accuracy_mean": 0.9633831454359111,
+  "accuracy_std": 0.007885464869232127,
+  "macro_f1_mean": 0.953984523476729,
+  "macro_f1_std": 0.009614073911555313,
+  "log_loss_mean": 0.2855749768098117,
+  "log_loss_std": 0.05690497639986279,
+  "total_time_seconds": 9776.2
+}

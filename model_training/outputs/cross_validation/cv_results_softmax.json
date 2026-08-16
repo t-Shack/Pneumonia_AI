@@ -1,0 +1,43 @@
+{
+  "activation": "softmax",
+  "folds": 5,
+  "fold_results": [
+    {
+      "fold": 1,
+      "val_accuracy": 0.9578544061302682,
+      "val_macro_f1": 0.9469107551487415,
+      "val_log_loss": 0.17244651635550887
+    },
+    {
+      "fold": 2,
+      "val_accuracy": 0.9702780441035475,
+      "val_macro_f1": 0.96203500721538,
+      "val_log_loss": 0.1157789031288417
+    },
+    {
+      "fold": 3,
+      "val_accuracy": 0.9731543624161074,
+      "val_macro_f1": 0.9659026162654936,
+      "val_log_loss": 0.10226744958987512
+    },
+    {
+      "fold": 4,
+      "val_accuracy": 0.9856184084372004,
+      "val_macro_f1": 0.9814591621603365,
+      "val_log_loss": 0.08837730140991602
+    },
+    {
+      "fold": 5,
+      "val_accuracy": 0.9721955896452541,
+      "val_macro_f1": 0.964645100961398,
+      "val_log_loss": 0.09484287571575074
+    }
+  ],
+  "accuracy_mean": 0.9718201621464754,
+  "accuracy_std": 0.008828738369986771,
+  "macro_f1_mean": 0.9641905283502699,
+  "macro_f1_std": 0.01099618504949452,
+  "log_loss_mean": 0.11474260923997848,
+  "log_loss_std": 0.030257472667183052,
+  "total_time_seconds": 11318.2
+}
