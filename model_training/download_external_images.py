@@ -26,6 +26,8 @@ HEADERS = {"User-Agent": "Mozilla/5.0"}
 JOBS = [
     ("normal",    "normal_zip_mapping.csv",    "data/external_nih_chestxray14/NORMAL"),
     ("pneumonia", "pneumonia_zip_mapping.csv", "data/external_nih_chestxray14/PNEUMONIA"),
+    ("mix_normal",    "trainmix_normal_zip_mapping.csv", "data/nih_train_mix/NORMAL"),
+    ("mix_pneumonia", "trainmix_pneumonia_zip_mapping.csv", "data/nih_train_mix/PNEUMONIA"),
 ]
 
 

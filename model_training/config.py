@@ -11,7 +11,7 @@ TEST_DIR = os.path.join(DATA_DIR, "test")
 NIH_CSV_PATH = os.environ.get("NIH_CSV_PATH", "./data/nih_raw/Data_Entry_2017.csv")
 EXTERNAL_TEST_DIR = os.environ.get("EXTERNAL_TEST_DIR", "./data/external_nih_chestxray14")
 NIH_TRAIN_MIX_DIR = os.environ.get("NIH_TRAIN_MIX_DIR", "./data/nih_train_mix")
-USE_MIXED_TRAINING = False  # enable only after populating NIH_TRAIN_MIX_DIR (see README)
+USE_MIXED_TRAINING = True  # enable only after populating NIH_TRAIN_MIX_DIR (see README)
 
 OUTPUT_DIR = "./outputs"
 MODELS_DIR = os.path.join(OUTPUT_DIR, "models")

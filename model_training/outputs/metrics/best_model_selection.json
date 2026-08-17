@@ -1,32 +1,32 @@
 {
-  "winner": "softmax",
+  "winner": "sigmoid",
   "strategy": "composite",
   "details": {
     "sigmoid": {
       "components": {
-        "primary": 0.8669871687889099,
-        "external": 0.5894479155540466,
-        "robustness": 0.7640224347511927
+        "primary": 0.8393162393162393,
+        "external": 0.5691823899371069,
+        "robustness": 0.7517361144224802
       },
       "weights_used": {
         "primary": 0.5,
         "external": 0.3,
         "robustness": 0.2
       },
-      "composite_score": 0.7631324460109075
+      "composite_score": 0.7407600595237478
     },
     "softmax": {
       "components": {
-        "primary": 0.8717948794364929,
-        "external": 0.6100628972053528,
-        "robustness": 0.7731036295493444
+        "primary": 0.8235042735042735,
+        "external": 0.5981830887491265,
+        "robustness": 0.7438568373521169
       },
       "weights_used": {
         "primary": 0.5,
         "external": 0.3,
         "robustness": 0.2
       },
-      "composite_score": 0.7735370347897211
+      "composite_score": 0.7399784308472981
     }
   }
 }
