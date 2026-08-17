@@ -185,6 +185,29 @@ def chart_filter_progression():
     print("Skipping filter-progression chart — not applicable to a pretrained backbone.")
 
 
+# add this function:
+def chart_per_class_recall(eval_results, filename="08_per_class_recall.png", title_suffix=""):
+    labels = ordered_labels(eval_results.keys())
+    fig, ax = plt.subplots(figsize=(5 + len(labels), 5))
+    x = np.arange(len(labels)); width = 0.35
+    def recalls(r):
+        rep = r["classification_report"]
+        return rep["NORMAL"]["recall"], rep["PNEUMONIA"]["recall"]
+    nr, pr = zip(*[recalls(eval_results[l]) for l in labels])
+    ax.bar(x - width / 2, nr, width, label="NORMAL recall (specificity)")
+    ax.bar(x + width / 2, pr, width, label="PNEUMONIA recall (sensitivity)")
+    ax.set_xticks(x); ax.set_xticklabels(labels); ax.set_ylim(0, 1)
+    ax.set_title(f"Per-Class Recall{title_suffix}"); ax.legend()
+    fig.tight_layout()
+    _save(fig, filename)
+
+# in main(), after chart_model_comparison(eval_results): add
+#     chart_per_class_recall(eval_results)
+# and inside the external block, after the 02b/03b charts: add
+#     chart_per_class_recall(external_results, filename="08b_external_per_class_recall.png",
+#                            title_suffix=" (External/NIH)")
+
+
 def _pick_balanced_samples(test_gen, per_class):
     class_indices = test_gen.class_indices
     idx_to_class = {v: k for k, v in class_indices.items()}
@@ -370,6 +393,7 @@ def main():
         chart_roc_curves(eval_results)
         chart_pr_curves(eval_results)
         chart_model_comparison(eval_results)
+        chart_per_class_recall(eval_results)
     else:
         print("Skipping evaluation-based charts — run evaluate.py first.")
 
@@ -387,6 +411,7 @@ def main():
         external_results = load_json(external_path)
         chart_confusion_matrices(external_results, filename="02b_external_confusion_matrices.png", title_suffix=" (External/NIH)")
         chart_roc_curves(external_results, filename="03b_external_roc_curves.png", title_suffix=" (External/NIH)")
+        chart_per_class_recall(external_results, filename="08b_external_per_class_recall.png", title_suffix=" (External/NIH)")
         if eval_results:
             chart_external_comparison(eval_results, external_results)
     else:

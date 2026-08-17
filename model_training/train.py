@@ -19,7 +19,7 @@ from tensorflow.keras.callbacks import EarlyStopping, CSVLogger
 
 import config
 import losses
-from data_pipeline import get_generators, print_dataset_summary
+from data_pipeline import get_generators, get_validation_eval_generator, print_dataset_summary
 from model_architecture import build_model, unfreeze_top_layers
 
 
@@ -124,7 +124,8 @@ def main():
     np.random.seed(config.RANDOM_SEED)
     tf.random.set_seed(config.RANDOM_SEED)
 
-    train_gen, val_gen, test_gen = get_generators()
+    train_gen, _, test_gen = get_generators()
+    val_gen = get_validation_eval_generator()
     print_dataset_summary(train_gen, val_gen, test_gen)
 
     deployment_config = {

@@ -171,3 +171,77 @@ reproducing the exact zero-support external-evaluation scenario.
 Not testable in this environment: actual ImageNet weight download (sandbox
 network can't reach the pretrained-weight host) — not needed this round
 since you provided the already-trained weights directly.
+
+
+# Pneumonia detection pipeline — v3
+
+## What changed vs v2 (audit fixes)
+1. Validation is ALWAYS clean (no augmentation) and is an explicit stratified
+   split (default 20%) shared by train.py, early stopping and threshold calibration.
+2. Threshold selection is recall-constrained (pneumonia recall >= 0.95 on val,
+   then max specificity) instead of unconstrained Youden's J on ~60 normals.
+3. Evaluation reports balanced accuracy + per-class recall; selector ranks on
+   balanced accuracy so "predict-everything-pneumonia" models cannot win.
+4. CV removes exact duplicates and cross-class label conflicts (Kermany noise)
+   and reports NORMAL recall per fold.
+5. Robustness 'motion_blur' is a real directional blur.
+
+## Run order
+python dedup_audit.py                      # inspect; add --quarantine to act
+python train.py
+python evaluate.py
+python robustness_test.py
+python evaluate_external.py
+python select_best_model.py
+python select_threshold.py                 # re-run AFTER every retrain
+python generate_charts.py
+python logit_diagnostic.py                 # sanity: per-class probability bands
+
+## Optional mixed-source training (domain shift fix)
+1. Build disjoint NIH train-mix mappings (patch in chat): run
+   generate_dataset_mapping.py with --out-prefix trainmix_ --exclude-csv
+   pneumonia_zip_mapping.csv normal_zip_mapping.csv
+2. Add two JOBS rows in download_external_images.py pointing the trainmix CSVs
+   at data/nih_train_mix/NORMAL and .../PNEUMONIA, then run it.
+3. Set USE_MIXED_TRAINING = True in config.py and retrain from train.py.
+The dataloader also enforces filename disjointness with the external test set.
+
+
+File
+Status
+
+config.py
+REWRITTEN — 20% val split, recall-constrained threshold default, dedup flag, mixed-training flags
+
+data_pipeline.py
+REWRITTEN — clean val always, explicit stratified split, mixed-source + leak guard
+
+select_threshold.py
+REWRITTEN — recall-floor threshold selection (kills the 0.387 failure mode)
+
+evaluate.py
+REWRITTEN — adds balanced accuracy, per-class recall, as_deployed block
+
+select_best_model.py
+REWRITTEN — composite ranks on balanced accuracy, not raw accuracy
+
+cross_validate.py
+REWRITTEN — exact-duplicate removal, per-class recall per fold
+
+robustness_test.py
+REWRITTEN — real motion blur (directional kernel)
+
+dedup_audit.py
+NEW — standalone duplicate/label-conflict audit
+
+README.md
+REWRITTEN
+
+generate_charts.py
+PATCHED (one new chart function, snippet below)
+
+train.py, evaluate_external.py, losses.py, model_architecture.py, gradcam.py
+UNCHANGED — audited correct. The val-augmentation bug is fixed inside data_pipeline, so train.py needs zero edits.
+
+download_external_images.py, generate_dataset_mapping.py, logit_diagnostic.py
+UNCHANGED (optional mix-support patch for the mapping script at the end)
