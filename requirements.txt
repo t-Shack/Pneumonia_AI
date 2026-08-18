@@ -9,3 +9,5 @@ Pillow
 scipy
 flask>=3.0
 xhtml2pdf
+huggingface_hub
+pydicom

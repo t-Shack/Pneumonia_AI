@@ -4,7 +4,7 @@ data_pipeline); threshold default = recall-constrained (not raw Youden);
 best-model composite ranks on balanced accuracy; optional mixed-source training."""
 import os
 
-DATA_DIR = os.environ.get("PNEUMONIA_DATA_DIR", "./data/chest_xray")
+DATA_DIR = os.environ.get("PNEUMONIA_DATA_DIR", "./data/rsna_chest_xray") # was ./data/chest_xray (Kermany)
 TRAIN_DIR = os.path.join(DATA_DIR, "train")
 TEST_DIR = os.path.join(DATA_DIR, "test")
 
@@ -53,7 +53,7 @@ CLASS_NAMES = ["NORMAL", "PNEUMONIA"]
 CV_FOLDS = 5
 CV_DEDUPLICATE_EXACT = True  # drop exact-duplicate / cross-class-conflicting files before folding
 
-THRESHOLD_SELECTION_METHOD = "recall_constrained"  # was "youdens_j"
+THRESHOLD_SELECTION_METHOD = "youdens_j"  # was "youdens_j"
 THRESHOLD_MIN_PNEUMONIA_RECALL = 0.95  # floor; among thresholds meeting it, max specificity wins
 
 BEST_MODEL_STRATEGY = "composite"
