@@ -4,29 +4,29 @@
   "details": {
     "sigmoid": {
       "components": {
-        "primary": 0.8393162393162393,
-        "external": 0.5691823899371069,
-        "robustness": 0.7517361144224802
+        "primary": 0.9307361800141744,
+        "external": 0.7225716282320056,
+        "robustness": 0.8790302574634552
       },
       "weights_used": {
         "primary": 0.5,
         "external": 0.3,
         "robustness": 0.2
       },
-      "composite_score": 0.7407600595237478
+      "composite_score": 0.85794562996938
     },
     "softmax": {
       "components": {
-        "primary": 0.8235042735042735,
-        "external": 0.5981830887491265,
-        "robustness": 0.7438568373521169
+        "primary": 0.9180147058823529,
+        "external": 0.7092941998602376,
+        "robustness": 0.8460441380739212
       },
       "weights_used": {
         "primary": 0.5,
         "external": 0.3,
         "robustness": 0.2
       },
-      "composite_score": 0.7399784308472981
+      "composite_score": 0.841004440514032
     }
   }
 }

@@ -5,14 +5,14 @@
     "backbone": "densenet121",
     "model_path": "./outputs/models/pneumonia_sigmoid.keras",
     "warmup_epochs": 5,
-    "fine_tune_epochs": 10,
-    "training_time_seconds": 1404.1,
-    "best_val_loss": 0.010501191020011902,
-    "best_val_accuracy": 0.9489402770996094,
+    "fine_tune_epochs": 26,
+    "training_time_seconds": 9761.2,
+    "best_val_loss": 0.03493969142436981,
+    "best_val_accuracy": 0.8988313674926758,
     "loss_function": "focal",
     "focal_alpha_used": [
-      0.741811175337187,
-      0.2581888246628131
+      0.3641068447412354,
+      0.6358931552587647
     ],
     "class_weight_applied": null
   },
@@ -22,14 +22,14 @@
     "backbone": "densenet121",
     "model_path": "./outputs/models/pneumonia_softmax.keras",
     "warmup_epochs": 5,
-    "fine_tune_epochs": 26,
-    "training_time_seconds": 2752.1,
-    "best_val_loss": 0.006536971312016249,
-    "best_val_accuracy": 0.9710982441902161,
+    "fine_tune_epochs": 12,
+    "training_time_seconds": 5309.3,
+    "best_val_loss": 0.03656728193163872,
+    "best_val_accuracy": 0.8924874663352966,
     "loss_function": "focal",
     "focal_alpha_used": [
-      0.741811175337187,
-      0.2581888246628131
+      0.3641068447412354,
+      0.6358931552587647
     ],
     "class_weight_applied": null
   }

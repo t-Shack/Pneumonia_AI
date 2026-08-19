@@ -11,5 +11,5 @@
   "model_format": "keras",
   "backbone": "densenet121",
   "best_model": "sigmoid",
-  "decision_threshold": 0.4583337604999542
+  "decision_threshold": 0.5985938906669617
 }
